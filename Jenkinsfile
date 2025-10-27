@@ -1,4 +1,4 @@
-pipeline {
+/*pipeline {
     agent any 
     
     stages { 
@@ -31,6 +31,53 @@ pipeline {
     }
     post {
         always {
+            bat 'docker logout'
+        }
+    }
+}
+
+*/
+
+
+pipeline{
+
+//can add enviroment variable or manual triggers here
+    stages{
+        stage("Checkout from the code repo"){
+            steps{
+                retry(3) {
+
+                git branch : 'main',url : 'https://github.com/Hasindu-1/GitHub-Docker-and-Jenkins-CI-CD-Pipeline.git'
+                }
+                
+            }
+        }
+        stage("Building Dokcer Image"){
+            steps{
+                //using bat just beacuse it is windows agent
+                //use sh for linux agents
+                bat 'docker build -t hasindu1/nodeapp:%BUILD_NUMBER% .'
+            }
+        }
+        stage("login to docker hub"){
+            steps{
+                withCredentials([string(credentialsId: 'docker-password-test', variable: 'docker-password')]) {
+             // some block
+            bat 'docker login -u hasindu-1 -p ${docker-password}'
+                }
+            }
+
+        }stage("Pushing Docker Image  to docker hub "){
+            steps{
+                bat 'docker push hasindu-1/nodeapp:%BUILD_NUMBER%'
+            }
+        }
+
+
+
+    }
+    post{
+        always{
             bat 'docker logout'
         }
     }
